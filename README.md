@@ -22,5 +22,4 @@ It includes a login system (demo OTP), trip listings, advanced search, animated 
 ## 🎯 Purpose
 Created for frontend practice and to showcase UI/UX skills.
 
-## 🌐 Live Demo
-(After enabling GitHub Pages, link will show here)
+
