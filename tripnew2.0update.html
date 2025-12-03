@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Rahul Travels — Book Your Trip (v3)</title>
+  <meta name="description" content="Rahul Travels - advanced travel booking demo (HTML/CSS/JS)">
+  <style>
+    /* ---------------------- RESET & BASIC ---------------------- */
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial}
+    :root{--brand:#0b6efd;--accent:#06b6d4;--muted:#6b7280;--surface:#07142b;--card:#071a2f}
+    body{background-size:cover;background-position:center center;transition:background-image 1s ease-in-out;color:#e6eef8;min-height:100vh}
+    a{color:inherit;text-decoration:none}
+
+    /* overlay so text is readable */
+    .bg-overlay{position:fixed;inset:0;background:linear-gradient(180deg,rgba(2,6,23,0.75),rgba(2,6,23,0.85));pointer-events:none;z-index:0}
+
+    /* container sits above background */
+    header, main, footer{position:relative;z-index:10}
+
+    /* ---------------------- NAV ---------------------- */
+    header{display:flex;align-items:center;justify-content:space-between;padding:18px 28px}
+    .brand{display:flex;align-items:center;gap:14px}
+    .logo-wrap{position:relative;width:70px;height:70px}
+    .logo-ring{position:absolute;inset:0;border-radius:50%;display:flex;align-items:center;justify-content:center;transform:rotateX(35deg) rotateZ(-20deg);box-shadow:0 8px 30px rgba(2,6,23,0.7);background:conic-gradient(from 210deg,#0ea5a0,#0b6efd,#7c3aed);}
+    .logo-text{position:absolute;inset:8px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(255,255,255,0.06),transparent);font-weight:900;font-size:12px;color:#fff;transform:translateZ(12px)}
+    nav{display:flex;gap:14px}
+    .nav-btn{padding:8px 12px;border-radius:8px;color:var(--muted);font-size:15px;background:transparent;border:none;cursor:pointer}
+    .nav-btn.active{background:linear-gradient(90deg,rgba(255,255,255,0.03),transparent);color:#fff}
+
+    /* ---------------------- LAYOUT ---------------------- */
+    .container{max-width:1200px;margin:18px auto;padding:22px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:14px;box-shadow:0 10px 40px rgba(2,6,23,0.85)}
+    .hero{display:grid;grid-template-columns:1fr 420px;gap:24px;align-items:center}
+    .hero h1{font-size:34px;line-height:1.05}
+    .hero p{color:var(--muted);margin-top:8px}
+    .cta{margin-top:18px;display:flex;gap:12px}
+    .btn{padding:10px 14px;border-radius:10px;cursor:pointer;border:none;font-weight:600}
+    .btn-primary{background:linear-gradient(90deg,var(--brand),#7c3aed);color:white}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+
+    /* search card */
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:18px;border-radius:12px}
+    .search-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+    .search-row input, .search-row select{flex:1;min-width:120px;padding:10px;border-radius:8px;border:none;background:rgba(255,255,255,0.03);color:#eaf4ff}
+
+    /* grid places */
+    .places-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+    .place{background:linear-gradient(180deg,rgba(255,255,255,0.015),transparent);border-radius:10px;overflow:hidden}
+    .place img{width:100%;height:170px;object-fit:cover;display:block}
+    .place .meta{padding:10px}
+    .price{font-weight:700;color:var(--accent)}
+    .tags{display:flex;gap:8px;margin-top:8px}
+    .tag{padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.03);font-size:13px}
+
+    /* modal / pages */
+    .modal{position:fixed;inset:0;background:rgba(2,6,23,0.85);display:none;align-items:center;justify-content:center;padding:22px;z-index:40}
+    .modal.show{display:flex}
+    .modal-card{width:min(980px,96%);background:#041025;padding:18px;border-radius:12px;max-height:92vh;overflow:auto}
+    .modal-card img{width:100%;height:360px;object-fit:cover;border-radius:8px}
+    .close{float:right;cursor:pointer;font-weight:700}
+
+    /* form */
+    form .row{display:flex;gap:8px;margin-top:10px}
+    form input, form textarea, form select{padding:10px;border-radius:8px;border:none;background:rgba(255,255,255,0.02);color:#eaf4ff;width:100%}
+    .muted{color:var(--muted);font-size:14px}
+
+    /* testimonial */
+    .testi{display:flex;gap:12px;align-items:center;background:rgba(255,255,255,0.02);padding:12px;border-radius:10px}
+    .testi img{width:56px;height:56px;border-radius:50%;object-fit:cover}
+
+    /* footer */
+    footer{margin-top:18px;padding:18px;text-align:center;color:var(--muted);font-size:14px}
+
+    /* responsive */
+    @media (max-width:1000px){.hero{grid-template-columns:1fr} .places-grid{grid-template-columns:repeat(2,1fr)} }
+    @media (max-width:600px){.places-grid{grid-template-columns:1fr} header{flex-direction:column;gap:12px}.logo-wrap{width:56px;height:56px}}
+
+    .hidden{display:none}
+    .center{display:flex;align-items:center;justify-content:center}
+    h1, h2, h3, p, .muted, .nav-btn, .btn {
+    text-shadow: 0 2px 12px rgba(0,0,0,0.85);
+  }
+</style>
+</head>
+<body>
+  <div class="bg-overlay"></div>
+  <header class="container" style="display:flex;align-items:center;justify-content:space-between">
+    <div class="brand">
+      <div class="logo-wrap">
+        <div class="logo-ring" aria-hidden></div>
+        <div class="logo-text">RAHUL</div>
+      </div>
+      <div>
+        <div style="font-weight:900">Rahul Travels</div>
+        <div style="font-size:12px;color:var(--muted)">Book with confidence • Demo</div>
+      </div>
+    </div>
+
+    <nav>
+      <button class="nav-btn active" data-page="home">Home</button>
+      <button class="nav-btn" data-page="places">Places</button>
+      <button class="nav-btn" data-page="trending">Trending</button>
+      <button class="nav-btn" data-page="about">About</button>
+      <button class="nav-btn" data-page="contact">Contact</button>
+      <button id="loginBtn" class="btn btn-ghost">Login</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <!-- HERO / HOME PAGE -->
+    <section id="home" class="page">
+      <div class="hero">
+        <div>
+          <h1>Discover India with <span style="color:var(--brand)">Rahul Travels</span></h1>
+          <p class="muted">Handpicked trips, transparent prices, and easy booking. Check trending destinations, view photos, and send an interest form to book.</p>
+          <div class="cta">
+            <button class="btn btn-primary" onclick="navigate('places')">Explore Places</button>
+            <button class="btn btn-ghost" onclick="scrollToForm()">I'm Interested</button>
+            <a class="btn btn-ghost" href="https://example.com" target="_blank">More Offers</a>
+          </div>
+
+          <div class="card" style="margin-top:16px">
+            <div style="font-weight:700">Advanced quick search</div>
+            <div class="search-row">
+              <input id="searchInput" placeholder="Search places, e.g. Goa, Manali, Spiti" />
+              <select id="duration">
+                <option value="any">Any</option>
+                <option value="1">1 day</option>
+                <option value="2">2 days</option>
+                <option value="3">3 days</option>
+                <option value="4">4 days</option>
+                <option value="5">5 days</option>
+                <option value="6">6 days</option>
+                <option value="7">7 days</option>
+                <option value="10">10 days</option>
+                <option value="14">14 days</option>
+              </select>
+              <select id="priceRange">
+                <option value="any">Any price</option>
+                <option value="0-5000">Under ₹5,000</option>
+                <option value="5000-10000">₹5,000 - ₹10,000</option>
+                <option value="10000-20000">₹10,000 - ₹20,000</option>
+                <option value="20000+">₹20,000+</option>
+              </select>
+              <button class="btn btn-primary" onclick="applySearch()">Search</button>
+            </div>
+            <div style="margin-top:10px;color:var(--muted);font-size:13px">Tip: Use filters to find trips by duration or price. Click Photos to see more images.</div>
+          </div>
+
+          <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+            <button class="btn btn-ghost" onclick="sortPlaces('price-asc')">Sort: Price Low → High</button>
+            <button class="btn btn-ghost" onclick="sortPlaces('price-desc')">Sort: Price High → Low</button>
+          </div>
+
+          <div class="places-grid" id="homePlaces">
+            <!-- dynamic cards inserted here -->
+          </div>
+
+          <h3 style="margin-top:18px">What customers say</h3>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px">
+            <div class="testi">
+              <img src="https://images.unsplash.com/photo-1531123414780-f6e30f2b4a4d?w=400" alt="user">
+              <div>
+                <div style="font-weight:700">Anita</div>
+                <div class="muted">"Great guide and smooth booking. Taj trip was perfect!"</div>
+              </div>
+            </div>
+            <div class="testi">
+              <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400" alt="user">
+              <div>
+                <div style="font-weight:700">Raj</div>
+                <div class="muted">"Loved the Kerala houseboat experience. Highly recommend."</div>
+              </div>
+            </div>
+            <div class="testi">
+              <img src="https://images.unsplash.com/photo-1545996124-1b2f1cd8f6f1?w=400" alt="user">
+              <div>
+                <div style="font-weight:700">Sonal</div>
+                <div class="muted">"Good value for money and local support from Rahul Travels."</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="card">
+          <div style="font-weight:700">Why Rahul Travels</div>
+          <ul style="margin-top:8px;line-height:1.7;color:var(--muted)">
+            <li>Clear prices — no hidden fees</li>
+            <li>Local guides & verified hotels</li>
+            <li>Flexible cancellation policy (demo)</li>
+          </ul>
+
+          <div style="margin-top:14px">
+            <div style="font-weight:700">Special: Indian Famous Trips</div>
+            <div style="margin-top:8px;color:var(--muted)">Taj Mahal, Goa Beaches, Manali Hills, Spiti Valley, Mumbai — all prices included below.</div>
+            <div style="margin-top:12px;display:flex;gap:8px;flex-direction:column">
+              <button class="btn btn-primary" onclick="navigate('places')">View All Trips</button>
+              <button class="btn btn-ghost" onclick="openModalBySlug('taj-mahal')">Quick Preview: Taj Mahal</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- PLACES PAGE -->
+    <section id="places" class="page hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2>Places</h2>
+        <div class="muted">Click a card to view photos & details</div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+        <input id="placesFilter" placeholder="Filter by name e.g. Goa" style="padding:8px;border-radius:8px;border:none;background:rgba(255,255,255,0.03);color:#eaf4ff;min-width:180px" />
+        <button class="btn btn-primary" onclick="applyPlacesFilter()">Apply</button>
+        <button class="btn btn-ghost" onclick="resetPlacesFilter()">Reset</button>
+        <a class="btn btn-ghost" href="https://example.com/other-app" target="_blank">Open Other App</a>
+      </div>
+
+      <div class="places-grid" id="placesGrid" style="margin-top:16px"></div>
+
+      <h3 style="margin-top:18px">Recent Bookings (demo)</h3>
+      <div id="bookingsList" style="margin-top:8px"></div>
+    </section>
+
+    <!-- TRENDING PAGE -->
+    <section id="trending" class="page hidden">
+      <h2>Trending</h2>
+      <div class="muted" style="margin-top:8px">Top picks by travelers this month.</div>
+      <div class="places-grid" id="trendingGrid" style="margin-top:14px"></div>
+    </section>
+
+    <!-- ABOUT PAGE -->
+    <section id="about" class="page hidden">
+      <h2>About Rahul Travels</h2>
+      <p class="muted" style="margin-top:8px">Rahul Travels — demo project built for showcasing frontend skills. No real booking is performed here.</p>
+      <p class="muted" style="margin-top:8px">This project intentionally runs fully in-browser. In production you'd call a server to process OTPs, store bookings, and handle payments.</p>
+    </section>
+
+    <!-- CONTACT PAGE -->
+    <section id="contact" class="page hidden">
+      <h2>Contact Us</h2>
+      <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:10px">
+        <div style="flex:1;min-width:280px" class="card">
+          <h3>Reach Rahul Travels</h3>
+          <p class="muted">Phone: +91 8788550401</p>
+          <p class="muted">Email: rahultravels1@gmail.com</p>
+          <p class="muted">Address: Pune, Maharashtra, India</p>
+          <div style="margin-top:10px">
+            <button class="btn btn-primary" onclick="openWhatsApp()">Chat on WhatsApp</button>
+            <button class="btn btn-ghost" onclick="navigate('home')">Back to Home</button>
+          </div>
+        </div>
+        <div style="flex:1;min-width:280px" class="card">
+          <h3>Office Timings</h3>
+          <p class="muted">Mon — Sat: 9:00 AM — 7:00 PM</p>
+          <h3 style="margin-top:10px">Follow us</h3>
+          <p class="muted">Instagram :rahultravels • YouTube rahul dounde  • Facebook</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- INTEREST / BOOKING FORM -->
+    <section id="interestForm" style="margin-top:18px">
+      <div class="card">
+        <h3>Interested in a trip? Send us your details</h3>
+        <p class="muted">We'll contact you (demo — no backend). Fill and click "Send Interest".</p>
+        <form id="bookForm" onsubmit="handleForm(event)">
+          <div class="row">
+            <input id="iname" placeholder="Full name" required />
+            <input id="iemail" type="email" placeholder="Email" required />
+          </div>
+          <div class="row">
+            <input id="iphone" placeholder="Phone" required />
+            <select id="itrip">
+              <!-- options filled by JS -->
+            </select>
+          </div>
+          <div style="margin-top:8px">
+            <textarea id="imessage" placeholder="Any message (optional)" rows="3"></textarea>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button type="submit" class="btn btn-primary">Send Interest</button>
+            <button type="button" class="btn btn-ghost" onclick="resetForm()">Reset</button>
+          </div>
+          <div id="formMessage" class="muted" style="margin-top:8px"></div>
+        </form>
+      </div>
+    </section>
+
+    <footer>
+      Rahul Travels • Demo website • Not for commercial use • Phone: +91 98765 43210 • Email: hello@rahultravels.example
+    </footer>
+  </main>
+
+  <!-- LOGIN / OTP PAGES (full-screen panels) -->
+  <div id="loginPage" class="modal">
+    <div class="modal-card">
+      <div class="close" onclick="closeLoginPage()">✕</div>
+      <h2>Login</h2>
+      <p class="muted">Enter phone to receive OTP. (Demo: enter any number and use OTP <strong>2105</strong>)</p>
+      <div style="margin-top:10px">
+        <input id="loginPhone" placeholder="Mobile number" />
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="sendOTPSingle()">Send OTP</button>
+          <button class="btn btn-ghost" onclick="closeLoginPage()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="otpPage" class="modal">
+    <div class="modal-card">
+      <div class="close" onclick="closeOTPPage()">✕</div>
+      <h2>Enter OTP</h2>
+      <p class="muted">We sent an OTP to your phone. (Demo OTP: <strong>2105</strong>)</p>
+      <div style="margin-top:10px">
+        <input id="otpInput" placeholder="Enter OTP" />
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="verifyOTPSingle()">Verify</button>
+        </div>
+        <div class="muted" style="margin-top:8px">Note: This is a demo OTP. Real apps must use a secure server to send OTPs.</div>
+      </div>
+      <!-- OVER SERVER IS DOUN PLACE USE THIS CODE NEXT -->
+    </div>
+  </div>
+
+  <!-- PLACE DETAILS MODAL -->
+  <div id="placeModal" class="modal">
+    <div class="modal-card">
+      <div class="close" onclick="closeModal()">✕</div>
+      <h3 id="modalTitle"></h3>
+      <img id="modalImage" src="" alt="place photo">
+      <p id="modalDesc" class="muted" style="margin-top:8px"></p>
+      <div style="margin-top:8px;font-weight:700">Price: <span id="modalPrice"></span></div>
+      <div style="margin-top:12px" id="modalGallery"></div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="openInterestFromModal()">I'm Interested</button>
+        <button class="btn btn-ghost" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ------------------ BACKGROUND SLIDER (changes every 5s) ------------------ */
+    const bgImages = [
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1400",
+      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1400",
+      "https://images.unsplash.com/photo-1502082553048-f009c37129b9?q=80&w=1400",
+      "https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=1400",
+      "https://images.unsplash.com/photo-1482192596544-9eb780fc7f66?q=80&w=1400",
+      "https://images.unsplash.com/photo-1493558103817-58b2924bce98?q=80&w=1400"
+    ];
+    let bgIndex=0;
+    function rotateBackground(){document.body.style.backgroundImage = `url('${bgImages[bgIndex]}')`; bgIndex = (bgIndex+1) % bgImages.length}
+    rotateBackground(); setInterval(rotateBackground,5000);
+
+    /* ------------------ SAMPLE DATA: Indian Famous Trips (added Spiti & Mumbai) ------------------ */
+    const trips = [
+      {slug:'taj-mahal',name:'Taj Mahal - Agra',price:4999,duration:1,short:'Visit the wonder of world — Taj Mahal. 1 day trip with guide.',images:[
+          'https://images.unsplash.com/photo-1549888834-714b3f2fb3b7?w=1200',
+          'https://images.unsplash.com/photo-1526481280698-3bfa7568c6d3?w=1200'
+        ]},
+      {slug:'goa',name:'Goa Beaches',price:8999,duration:4,short:'Relax on sandy beaches, nightlife, and seafood.',images:[
+          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200',
+          'https://images.unsplash.com/photo-1501973801540-537f08ccae7f?w=1200'
+        ]},
+      {slug:'manali',name:'Manali - Himalayas',price:6999,duration:5,short:'Hilly escape with snow (seasonal), paragliding & treks.',images:[
+          'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1200'
+        ]},
+      {slug:'spiti',name:'Spiti Valley',price:15999,duration:7,short:'Remote cold desert valley — high-altitude landscapes and monasteries.',images:[
+          'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1200',
+          'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200'
+        ]},
+      {slug:'mumbai',name:'Mumbai - The Dream City',price:2999,duration:1,short:'City tour: Marine Drive, Gateway of India, local food & nightlife.',images:[
+          'https://images.unsplash.com/photo-1493558103817-58b2924bce98?w=1200',
+          'https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1200'
+        ]},
+      {slug:'leh',name:'Leh-Ladakh',price:27999,duration:10,short:'High altitude adventure, Pangong, Nubra & more.',images:[
+          'https://images.unsplash.com/photo-1543965179-7c1f3e5b0b59?w=1200'
+        ]},
+      {slug:'kerala',name:'Kerala Backwaters',price:12999,duration:7,short:'Houseboats, spice trails and tranquil backwaters.',images:[
+          'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=1200'
+        ]}
+    ];
+
+    // render card
+    function createCard(t){
+      const div = document.createElement('div');div.className='place';
+      div.innerHTML = `
+        <img src="${t.images[0]}" alt="${t.name}">
+        <div class=\"meta\">
+          <div style=\"display:flex;justify-content:space-between;align-items:center\">
+            <div style=\"font-weight:700\">${t.name}</div><div class=\"price\">₹${t.price}</div>
+          </div>
+          <div class=\"muted\">${t.short}</div>
+          <div class=\"tags\">
+            <div class=\"tag\">India</div><div class=\"tag\">${t.duration} days</div>
+          </div>
+          <div style=\"margin-top:8px;display:flex;gap:8px;flex-wrap:wrap\">
+            <button class=\"btn btn-primary\" onclick=\"openModalBySlug('${t.slug}')\">View</button>
+            <button class=\"btn btn-ghost\" onclick=\"addToCart('${t.slug}')\">Book</button>
+            <button class=\"btn btn-ghost\" onclick=\"showGallery('${t.slug}')\">Photos</button>
+          </div>
+        </div>
+      `;return div;
+    }
+
+    function populate(){
+      const homePlaces = document.getElementById('homePlaces');const placesGrid = document.getElementById('placesGrid');const trendingGrid=document.getElementById('trendingGrid');
+      homePlaces.innerHTML='';placesGrid.innerHTML='';trendingGrid.innerHTML='';
+      trips.forEach(t=>{homePlaces.appendChild(createCard(t));placesGrid.appendChild(createCard(t));trendingGrid.appendChild(createCard(t));
+        const sel = document.getElementById('itrip');if(sel){const opt=document.createElement('option');opt.value=t.slug;opt.textContent=`${t.name} — ₹${t.price}`;sel.appendChild(opt);}  
+      })
+    }
+
+    populate();
+
+    /* ------------------ NAVIGATION (robust) ------------------ */
+    document.querySelectorAll('.nav-btn').forEach(el=>el.addEventListener('click',e=>{const p=el.dataset.page;navigate(p)}));
+    function navigate(page){document.querySelectorAll('.page').forEach(s=>s.classList.add('hidden'));const target=document.getElementById(page); if(target) target.classList.remove('hidden'); document.querySelectorAll('.nav-btn').forEach(n=>n.classList.toggle('active', n.dataset.page===page)); window.scrollTo({top:0,behavior:'smooth'})}
+
+    /* ------------------ SEARCH (advanced) ------------------ */
+    function applySearch(){
+      const q=document.getElementById('searchInput').value.toLowerCase();
+      const dur=document.getElementById('duration').value;
+      const price=document.getElementById('priceRange').value;
+      const cards=document.getElementById('placesGrid');cards.innerHTML='';
+      const filtered = trips.filter(t=>{
+        const matchText = q? (t.name.toLowerCase().includes(q)||t.short.toLowerCase().includes(q)) : true;
+        const matchDur = dur==='any'? true : (t.duration <= Number(dur));
+        let matchPrice=true;
+        if(price!=='any'){
+          if(price==='20000+') matchPrice = t.price>=20000; else {const parts=price.split('-'); matchPrice = t.price >= Number(parts[0]) && t.price <= Number(parts[1]);}
+        }
+        return matchText && matchDur && matchPrice;
+      });
+      if(filtered.length===0){cards.innerHTML='<div class="card muted">No results. Try removing filters.</div>';navigate('places');return}
+      filtered.forEach(t=>cards.appendChild(createCard(t)));
+      navigate('places');
+    }
+
+    /* ------------------ SORT ------------------ */
+    function sortPlaces(mode){
+      if(mode==='price-asc') trips.sort((a,b)=>a.price-b.price);
+      if(mode==='price-desc') trips.sort((a,b)=>b.price-a.price);
+      populate();
+      navigate('places');
+    }
+
+    /* ------------------ PLACES FILTER (on places page) ------------------ */
+    function applyPlacesFilter(){const q=document.getElementById('placesFilter').value.toLowerCase();const grid=document.getElementById('placesGrid');grid.innerHTML='';const filtered = trips.filter(t=>t.name.toLowerCase().includes(q)||t.short.toLowerCase().includes(q));if(filtered.length===0){grid.innerHTML='<div class="card muted">No places found.</div>';return} filtered.forEach(t=>grid.appendChild(createCard(t)));}
+    function resetPlacesFilter(){document.getElementById('placesFilter').value='';populate();}
+
+    /* ------------------ MODAL / DETAILS ------------------ */
+    function openModalBySlug(slug){const t=trips.find(x=>x.slug===slug);if(!t) return;document.getElementById('modalTitle').textContent=t.name;document.getElementById('modalImage').src=t.images[0];document.getElementById('modalDesc').textContent=t.short;document.getElementById('modalPrice').textContent='₹'+t.price;
+      const g=document.getElementById('modalGallery');g.innerHTML='';t.images.forEach(img=>{const im=document.createElement('img');im.src=img;im.style.width='120px';im.style.height='80px';im.style.objectFit='cover';im.style.marginRight='8px';im.style.borderRadius='6px';im.onclick=()=>document.getElementById('modalImage').src=img;g.appendChild(im)});
+      document.getElementById('placeModal').classList.add('show')}
+    function closeModal(){document.getElementById('placeModal').classList.remove('show')}
+    function showGallery(slug){openModalBySlug(slug);} 
+
+    /* ------------------ INTEREST FORM ------------------ */
+    function handleForm(e){e.preventDefault();const name=document.getElementById('iname').value;const email=document.getElementById('iemail').value;const phone=document.getElementById('iphone').value;const trip=document.getElementById('itrip').value;const msg=document.getElementById('imessage').value;
+      const bookings = JSON.parse(localStorage.getItem('rahul_bookings')||'[]');
+      bookings.push({name,email,phone,trip,msg,date:new Date().toISOString()});
+      localStorage.setItem('rahul_bookings',JSON.stringify(bookings));
+      document.getElementById('formMessage').textContent='Thanks '+name+' — we received your interest for '+trip+'. We will contact you soon. (Demo — saved locally)';
+      document.getElementById('bookForm').reset();renderBookings();setTimeout(()=>document.getElementById('formMessage').textContent='',6000);
+    }
+    function resetForm(){document.getElementById('bookForm').reset();document.getElementById('formMessage').textContent='';}
+    function scrollToForm(){document.getElementById('interestForm').scrollIntoView({behavior:'smooth'})}
+
+    /* ------------------ SEPARATE LOGIN/OTP PAGES (demo) ------------------ */
+    function sendOTPSingle(){const phone=document.getElementById('loginPhone').value; if(!phone){alert('Enter phone');return;} localStorage.setItem('rahul_otp_phone',phone); document.getElementById('loginPage').classList.remove('show'); document.getElementById('otpPage').classList.add('show'); alert('Demo: OTP is 2105 (do not use in production)');}
+    function verifyOTPSingle(){const v=document.getElementById('otpInput').value.trim(); if(v==='2105'){localStorage.setItem('rahul_user','logged');localStorage.removeItem('rahul_otp_phone');document.getElementById('otpPage').classList.remove('show');alert('Logged in (demo)');}else{alert('Invalid OTP. Use 2105 for demo');}}
+    function closeLoginPage(){document.getElementById('loginPage').classList.remove('show')}
+    function closeOTPPage(){document.getElementById('otpPage').classList.remove('show')}
+    document.getElementById('loginBtn').addEventListener('click',()=>{document.getElementById('loginPage').classList.add('show')})
+
+    /* ------------------ BOOK BUTTON (client-side) ------------------ */
+    function addToCart(slug){const t=trips.find(x=>x.slug===slug);if(!t)return; const wants = confirm('Book '+t.name+' for ₹'+t.price+'? (Demo — no payment)'); if(wants){document.getElementById('itrip').value=slug;scrollToForm();}}
+    function openInterestFromModal(){document.getElementById('placeModal').classList.remove('show');document.getElementById('itrip').value=document.getElementById('modalTitle').textContent.toLowerCase().split(' ').slice(0,2).join('-');scrollToForm();}
+
+    /* ------------------ BOOKINGS (demo list) ------------------ */
+    function renderBookings(){const list=document.getElementById('bookingsList'); if(!list) return; const bookings = JSON.parse(localStorage.getItem('rahul_bookings')||'[]'); if(bookings.length===0){list.innerHTML='<div class="muted">No bookings yet (demo)</div>';return} list.innerHTML=''; bookings.slice().reverse().forEach(b=>{const el=document.createElement('div');el.className='card';el.style.marginBottom='8px';el.innerHTML=`<div style="display:flex;justify-content:space-between"><div><strong>${b.name}</strong><div class=\"muted\">${b.trip} • ${new Date(b.date).toLocaleString()}</div></div><div style=\"text-align:right\"><div class=\"muted\">${b.phone}</div><div class=\"muted\">${b.email}</div></div></div><div style=\"margin-top:8px\">${b.msg||''}</div>`;list.appendChild(el)})}
+
+    /* ------------------ HELPERS ------------------ */
+    function openWhatsApp(){window.open('https://wa.me/919876543210','_blank')}
+
+    // initial page
+    navigate('home');renderBookings();
+
+    /* ------------------ DEV NOTES ------------------ */
+    // NOTE TO DEVELOPER:
+    // - Background images are Unsplash placeholders. If you want Google images specifically, download them and replace the URLs in bgImages array.
+    // - Images use Unsplash placeholders for places. Replace with your own images if needed.
+    // - This app is front-end only. To make it real you need a backend server to:
+    //   * send secure OTPs (not hard-coded 2105),
+    //   * store bookings in a database,
+    //   * process payments via gateway like Stripe/Paytm.
+    // - The user requested a comment: "OVER SERVER IS DOUN PLACE USE THIS CODE NEXT" — this comment is included above in the OTP modal area.
+    // - To publish on GitHub: save this file as index.html, create a repo, push, and enable GitHub Pages (optional).
+
+  </script>
+</body>
+</html>
